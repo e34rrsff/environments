@@ -1,0 +1,6 @@
+exams:
+    - exam: "ello"
+      id: 1
+
+    - exam: "sup"
+      id: 3

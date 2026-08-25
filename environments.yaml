@@ -1,0 +1,59 @@
+default_username: "student"
+
+# top item thing
+environments:
+  - environment: "Example"
+    run:
+      # when any action here fails (besides something like spawn_shell, which
+      # can return an exit code specified by the user), the program should
+      # go to "failed" view that simply shows the user an error ocurred and
+      # prompt them to hit a key and return to the main menu
+      - action: setup_user_env # i expect other exams to have a user directory
+                               # that run in a restricted bash shell, so
+                               # allowed programs will make symlinks to something
+                               # binaries they can execute from ~/.local/bin
+                               #
+                               # setup_user_env should automatically make the
+                               # user a ~/.bash_profile with a line that sets
+                               # an appropriate PATH value
+        name: default_username
+        shell: "/usr/bin/false"
+        skel:
+          # skel should have a list of "file objects"(?) which will just be
+          # files to add under the user's home
+          - name: ".bash_profile"
+            # if the name ends in /, then it will be a directory. you should
+            # also be able to specify a full path for directories to be made
+            # recursively
+
+            # owner: # user and group owner permissions
+            # group:
+            permissions: rw- # i can change this to a 3/4 digit number if that
+                             # is simpler to code
+            append: 'PS1="[$USER \W]$ "' # i may just make this the part of the
+                                         # default contents
+            #write:
+            # 'write' and 'append' should be mutually exclusive fields here,
+            # where write will overwrite the whole file, append just appends
+
+        allowed_programs:
+          - "/usr/bin/bash"
+          - "/usr/bin/ls"
+          - "/usr/bin/whoami"
+        # setup_user_env should ensure home permissions are recursively set to
+        # the user's user & group ownership after all else is done
+
+      - action: spawn_shell
+        shell: rbash # the go program should run bash -r since rbash isnt always available
+        user: default_username
+
+    grade:
+      # as opposed to actions under `run`, ones here should just add 0 to the
+      # user's grade when any action fails
+      - point: "Check if user created ~/pass"
+        weight: 1 # a weight to later evaluate the user's score
+        steps: # steps is just a  list of actions
+            - action: ensure_node
+              type: file
+              prefix: "action:get_user_home $default_username" # should get user home from /etc/passwd
+              path: "pass" # this is relative to the path specified by the prefix field
